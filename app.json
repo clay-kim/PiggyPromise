@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Weekly Budget",
+    "slug": "weekly-budget",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/piggybankThumb.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/piggybankLong.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clay86.weeklybudget"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e4cd3c45-26e3-45f4-93f0-0511615bdc5c"
+      }
+    },
+    "plugins": [
+      "expo-build-properties",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ]
+  }
+}
