@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import {
   Alert,
   View,
@@ -18,13 +18,14 @@ import {
   Vibration,
 } from "react-native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TransactionContext } from "./TransactionContext";
 import { BudgetContext } from "./BudgetContext"; // Import the context
+import { auth } from "../firebaseConfig"; // auth 객체 가져오기
 
 const Home = ({ navigation }) => {
   const { weeklyBudget } = useContext(BudgetContext); // Get the weekly budget from context
-  const { transactions, setTransactions } = useContext(TransactionContext);
+  const { transactions, setTransactions, addTransaction, fetchTransactions } =
+    useContext(TransactionContext);
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -47,9 +48,19 @@ const Home = ({ navigation }) => {
     { id: "2", name: "Dining" },
     { id: "3", name: "Auto" },
     { id: "4", name: "Entertainment" },
-    { id: "5", name: "Taba_Uni" },
+    { id: "5", name: "Pet" },
     { id: "6", name: "Other" },
   ];
+
+  // 사용자가 로그인할 때 트랜잭션 데이터 불러오기
+  useEffect(() => {
+    if (auth.currentUser) {
+      const userId = auth.currentUser.uid; // 현재 사용자의 ID 가져오기
+      fetchTransactions(userId); // 트랜잭션 데이터 불러오기
+    } else {
+      console.log("User is not logged in."); // 사용자가 로그인하지 않은 경우 로그 출력
+    }
+  }, [auth.currentUser]); // auth.currentUser가 변경될 때마다 실행
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -64,13 +75,18 @@ const Home = ({ navigation }) => {
     };
 
     try {
-      // Update transactions in state and AsyncStorage
-      const updatedTransactions = [newTransaction, ...transactions]; // Add to the start of the array
-      await AsyncStorage.setItem(
-        "transactions",
-        JSON.stringify(updatedTransactions)
-      );
-      setTransactions(updatedTransactions); // Update state from context
+      // 현재 사용자의 ID 가져오기
+      if (!auth.currentUser) {
+        throw new Error("User is not logged in."); // 사용자가 로그인하지 않은 경우 에러 처리
+      }
+      const userId = auth.currentUser.uid; // auth 객체 사용
+
+      // Firebase에 트랜잭션 추가
+      addTransaction(userId, newTransaction); // addTransaction 사용
+
+      // 상태 업데이트
+      const updatedTransactions = [newTransaction, ...transactions];
+      setTransactions(updatedTransactions);
 
       Alert.alert(
         "Transaction Added",

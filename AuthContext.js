@@ -12,6 +12,11 @@ export const AuthProvider = ({ children }) => {
   // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log("User logged in:", user.email); // 로그인 성공 시 로그 출력
+      } else {
+        console.log("User logged out"); // 로그아웃 시 로그 출력
+      }
       setUser(user); // Update the user state
       setLoading(false); // Set loading to false once the user state is determined
     });

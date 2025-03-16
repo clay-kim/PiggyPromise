@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useState } from "react";
 import { ref, push, onValue, remove } from "firebase/database";
+import { database } from "../firebaseConfig"; // Firebase 초기화 파일에서 가져옴
 // Create the context
 export const TransactionContext = createContext();
 
@@ -11,15 +11,19 @@ export const TransactionProvider = ({ children }) => {
   // 트랜잭션 불러오기
   const fetchTransactions = (userId) => {
     const transactionsRef = ref(database, `transactions/${userId}`);
+    console.log(`Fetching transactions for user: ${userId}`); // 로그 추가
+
     onValue(transactionsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
+        console.log("Data fetched successfully:", data); // 데이터 로깅
         const transactionsArray = Object.keys(data).map((key) => ({
           id: key,
           ...data[key],
         }));
         setTransactions(transactionsArray);
       } else {
+        console.log("No transactions found for this user."); // 로그 추가
         setTransactions([]);
       }
     });
@@ -28,6 +32,8 @@ export const TransactionProvider = ({ children }) => {
   // 트랜잭션 추가
   const addTransaction = (userId, transaction) => {
     const transactionsRef = ref(database, `transactions/${userId}`);
+    console.log(`Adding transaction for user: ${userId}`, transaction); // 로그 추가
+
     push(transactionsRef, transaction)
       .then(() => {
         console.log("트랜잭션 추가 성공");
@@ -39,16 +45,22 @@ export const TransactionProvider = ({ children }) => {
 
   // 트랜잭션 삭제
   const deleteTransaction = (userId, transactionId) => {
-    const transactionRef = ref(
-      database,
-      `transactions/${userId}/${transactionId}`
-    );
+    const transactionRef = ref(database, `transactions/${userId}`);
+
     remove(transactionRef)
       .then(() => {
-        console.log("트랜잭션 삭제 성공");
+        console.log("Transaction deleted successfully."); // 성공 로그
+        // 상태 업데이트
+        const updatedTransactions = transactions.filter(
+          (transaction) => transaction.id !== transactionId
+        );
+        setTransactions(updatedTransactions);
+        console.log(
+          `Deleting transaction: ${transactionId} for user: ${userId}`
+        ); // 로그 추가
       })
       .catch((error) => {
-        console.error("트랜잭션 삭제 실패:", error);
+        console.error("Failed to delete transaction:", error); // 에러 로깅
       });
   };
 
@@ -56,6 +68,7 @@ export const TransactionProvider = ({ children }) => {
     <TransactionContext.Provider
       value={{
         transactions,
+        setTransactions,
         fetchTransactions,
         addTransaction,
         deleteTransaction,
@@ -65,67 +78,3 @@ export const TransactionProvider = ({ children }) => {
     </TransactionContext.Provider>
   );
 };
-
-// // Load transactions from AsyncStorage
-// useEffect(() => {
-//   const loadTransactions = async () => {
-//     try {
-//       const storedTransactions = await AsyncStorage.getItem("transactions");
-//       if (storedTransactions) {
-//         setTransactions(JSON.parse(storedTransactions));
-//       }
-//     } catch (error) {
-//       console.error("Failed to load transactions", error);
-//     }
-//   };
-
-//   loadTransactions();
-// }, []);
-
-// // Save transactions to AsyncStorage whenever state changes
-// useEffect(() => {
-//   const saveTransactions = async () => {
-//     try {
-//       await AsyncStorage.setItem(
-//         "transactions",
-//         JSON.stringify(transactions)
-//       );
-//     } catch (error) {
-//       console.error("Failed to save transactions", error);
-//     }
-//   };
-
-//   if (transactions.length) {
-//     saveTransactions();
-//   }
-// }, [transactions]);
-
-// // Function to delete a transaction
-// const deleteTransaction = async (id) => {
-//   try {
-//     // Filter out the transaction with the specified id
-//     const updatedTransactions = transactions.filter(
-//       (transaction) => transaction.id !== id
-//     );
-
-//     // Save the updated transactions back to AsyncStorage
-//     await AsyncStorage.setItem(
-//       "transactions",
-//       JSON.stringify(updatedTransactions)
-//     );
-
-//     // Update the state with the new transactions list
-//     setTransactions(updatedTransactions);
-//   } catch (error) {
-//     console.error("Failed to delete transaction", error);
-//   }
-// };
-
-//   return (
-//     <TransactionContext.Provider
-//       value={{ transactions, setTransactions, deleteTransaction }}
-//     >
-//       {children}
-//     </TransactionContext.Provider>
-//   );
-// };
