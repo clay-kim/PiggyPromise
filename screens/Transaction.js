@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { TransactionContext } from "./TransactionContext"; // Import context
 import { PieChart } from "react-native-chart-kit"; // Import PieChart from react-native-chart-kit
+import { auth } from "../firebaseConfig"; // auth 객체 가져오기
 
 const Transaction = ({ navigation }) => {
   const { transactions, deleteTransaction } = useContext(TransactionContext); // Use context to get transactions
@@ -15,9 +16,15 @@ const Transaction = ({ navigation }) => {
   // Handle deleting the transaction
   const handleDeleteItem = async (id) => {
     try {
-      deleteTransaction(id);
+      if (!auth.currentUser) {
+        throw new Error("User is not logged in."); // 사용자가 로그인하지 않은 경우 에러 처리
+      }
+      const userId = auth.currentUser.uid; // 현재 사용자의 ID 가져오기
+      deleteTransaction(userId, id); // deleteTransaction 호출
+      console.log("Transaction page handleDeleted working");
     } catch (error) {
       console.error("Failed to delete the transaction", error);
+      Alert.alert("Error", error.message); // 사용자에게 에러 메시지 표시
     }
   };
 
@@ -63,7 +70,7 @@ const Transaction = ({ navigation }) => {
     Grocery: "#ffdb15",
     Entertainment: "#f582a8",
     Dining: "#97d49b",
-    Taba_Uni: "#163b50",
+    Pet: "#163b50",
     Other: "#97a090",
     "?": "#e9dac4",
   };
